@@ -127,7 +127,12 @@ func handleConnection(conn net.Conn, inXRCh chan XRPacket, outHEPCh chan []byte)
 			log.Println(err)
 			continue
 		}
-		labels := map[string]string{"job": "vqrtcpxr", "from_user": sipmsg.From.URI.User, "from_host": sipmsg.From.URI.Host, "contact_host": sipmsg.ContactHost}
+		labels := map[string]string{
+			"job":          "vqrtcpxr",
+			"from_user":    sipmsg.From.URI.User,
+			"from_host":    sipmsg.From.URI.Host,
+			"contact_host": sipmsg.ContactHost,
+			"xr_addr":      conn.RemoteAddr().String()}
 		logEntry := LogEntry{
 			Timestamp: strconv.FormatInt(time.Now().UnixNano(), 10), // todo handle time better?
 			Line:      sipmsg.Body,
