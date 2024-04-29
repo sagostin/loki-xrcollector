@@ -1,34 +1,31 @@
-# heplify-xrcollector
+# loki-xrcollector
 
-Is a collector for SIP RTCP-XR voice quality reports and a HEP client.
+Is a collector for SIP RTCP-XR voice quality reports, then sends them over to a Loki server. It is designed to allow messages using only TLS.
+
+This is a fork of the heplify-xrcollector.
 
 ### Installation
 
-Download [heplify-xrcollector](https://github.com/negbie/heplify-xrcollector/releases) and execute 'chmod +x heplify-xrcollector'
+Generate certificates
+
+```
+openssl req -x509 -newkey rsa:4096 -keyout server_enc.key -out server.crt -sha256 -days 365
+then
+openssl rsa -in server_enc.key -out server.key
+```
+
+Build this repository from source.
+
+Setup system service and include Loki information.
+
+Run and wait for traffic.
 
 ### Usage
 
 ```bash
-  -debug
+-debug
         Log with debug level
-  -hi uint
-        HEP ID (default 3333)
-  -hs string
-        HEP UDP server address (default "127.0.0.1:9060")
   -xs string
-        XR collector UDP listen address (default ":5060")
+        XR collector UDP listen address (default ":7060")
 ```
 
-### Examples
-
-```bash
-# Listen on 0.0.0.0:5060 for vq-rtcpxr and send it as HEP to 127.0.0.1:9060
-./heplify-xrcollector
-
-# Listen on 0.0.0.0:9066 for vq-rtcpxr and send it as HEP to 192.168.1.10:9060
-./heplify-xrcollector -xs :9066 -hs 192.168.1.10:9060
-
-# Additionally change HEP ID to 1234 and log with debug level
-./heplify-xrcollector -xs :9066 -hs 192.168.1.10:9060 -hi 1234 -debug
-
-```
