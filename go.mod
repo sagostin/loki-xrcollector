@@ -1,4 +1,4 @@
-module github.com/negbie/heplify-xrcollector
+module github.com/sagostin/loki-xrcollector
 
 go 1.21.3
 
