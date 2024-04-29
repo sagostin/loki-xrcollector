@@ -25,7 +25,13 @@ Run and wait for traffic.
 ```bash
 -debug
         Log with debug level
-  -xs string
+-xs string
         XR collector UDP listen address (default ":7060")
+-lokiURL string
+        Loki URL
+-lokiUser string
+        Loki Basic Auth Username
+-lokiPass string
+        Loki Basic Auth Password
 ```
 
