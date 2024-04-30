@@ -4,11 +4,44 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/negbie/sipparser"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
+
+func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr string) error {
+	ip := net.ParseIP(strings.Split(wanAddr, ":")[0])
+	geoIpRecord, err := geoIpDB.City(ip)
+	if err != nil {
+		log.Error(err)
+	}
+
+	// todo grab customer / info based on device MAC using cached list of devices using ConnectWise linker
+
+	labels := map[string]string{
+		"job":      "vqrtcpxr",
+		"device":   device,
+		"lan_addr": lanAddr,
+		"wan_addr": ip.String(),
+		"city":     geoIpRecord.City.Names["en"],
+		/*"lat": geoIpRecord.Location.Latitude,
+		"long": geoIpRecord.Location.Longitude,
+		"customer": "todo using connectwise",*/
+	}
+
+	logEntry := LogEntry{
+		Timestamp: strconv.FormatInt(time.Now().UnixNano(), 10), // todo handle time better?
+		Line:      sipMsg.Body,
+	}
+
+	return lokiClient.PushLog(labels, logEntry)
+}
 
 // LokiClient holds the configuration for the Loki client.
 type LokiClient struct {
