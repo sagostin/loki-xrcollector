@@ -30,6 +30,7 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		"lan_addr":   lanAddr,
 		"wan_addr":   ip.String(),
 		"city":       geoIpRecord.City.Names["en"],
+		"region":     geoIpRecord.Subdivisions[0].Names["en"],
 		"country":    geoIpRecord.Country.Names["en"],
 		"user_agent": sipMsg.UserAgent,
 		/*"lat": geoIpRecord.Location.Latitude,
@@ -37,12 +38,15 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		"customer": "todo using connectwise",*/
 	}
 
+	log.Info("Sender has multiple subdivisions/regions: ", geoIpRecord.Subdivisions)
+
 	vqRtcpXr := parseSipMsg(&sipMsg)
 	vqRtcpXr.Extra = VqExtra{
 		Latitude:  strconv.FormatFloat(geoIpRecord.Location.Latitude, 'f', -1, 64),
 		Longitude: strconv.FormatFloat(geoIpRecord.Location.Longitude, 'f', -1, 64),
 		Country:   geoIpRecord.Country.Names["en"],
 		City:      geoIpRecord.City.Names["en"],
+		Region:    geoIpRecord.Subdivisions[0].Names["en"],
 	}
 
 	marshal, err := json.Marshal(vqRtcpXr)
@@ -89,6 +93,7 @@ type VqExtra struct {
 	Longitude string `json:"longitude,omitempty"`
 	Country   string `json:"country,omitempty"`
 	City      string `json:"city,omitempty"`
+	Region    string `json:"region,omitempty"`
 	Customer  string `json:"customer,omitempty"` // look up using external API that we store for a period?
 	System    string `json:"system,omitempty"`   // look up using external API that we store for a period?
 }
