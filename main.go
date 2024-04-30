@@ -40,7 +40,7 @@ func init() {
 	flag.StringVar(&lokiURL, "lokiURL", "", "URL to Loki's push API")
 	flag.StringVar(&lokiUser, "lokiUser", "", "Username for Loki")
 	flag.StringVar(&lokiPass, "lokiPass", "", "Password for Loki")
-	flag.StringVar(&cfg.GeoIpFile, "geoIpDB", "./GeoIP2-City.mmdb", "Path to GeoIP2 database")
+	flag.StringVar(&cfg.GeoIpFile, "geoIpDB", "./GeoLite2-City.mmdb", "Path to GeoIP2 database")
 	flag.Parse()
 
 	if lokiURL != "" {
