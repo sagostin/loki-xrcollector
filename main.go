@@ -53,6 +53,8 @@ var lokiClient *LokiClient
 func main() {
 	go startTLS()
 	go startUDP()
+
+	select {}
 }
 
 func startUDP() {
@@ -77,8 +79,6 @@ func startUDP() {
 	for packet := range inXRCh {
 		outXRCh <- packet
 	}
-
-	select {}
 }
 
 func startTLS() {
