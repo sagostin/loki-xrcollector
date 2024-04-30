@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/negbie/sipparser"
 	log "github.com/sirupsen/logrus"
+	"io"
 	"net"
 )
 
@@ -17,7 +18,7 @@ func handleUDP(conn *net.UDPConn, inXRCh chan XRPacketUDP) {
 	buffer := make([]byte, maxPktSize)
 	for {
 		n, addr, err := conn.ReadFromUDP(buffer)
-		if err != nil {
+		if err != nil && err != io.EOF {
 			log.Println("Error on XR read: ", err)
 			continue
 		}
@@ -62,7 +63,7 @@ func handleTLS(conn net.Conn, inXRCh chan XRPacketTLS) {
 	buffer := make([]byte, maxPktSize)
 	for {
 		n, err := conn.Read(buffer)
-		if err != nil {
+		if err != nil && err != io.EOF {
 			log.Println("Error on XR read: ", err)
 			continue
 		}

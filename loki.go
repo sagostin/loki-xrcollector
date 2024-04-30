@@ -43,6 +43,46 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 	return lokiClient.PushLog(labels, logEntry)
 }
 
+type VqRtcpXr struct {
+	VqReport      string    `json:"vqReport,omitempty"`
+	CallID        string    `json:"callID,omitempty"`
+	LocalID       string    `json:"localID,omitempty"`
+	RemoteID      string    `json:"remoteID,omitempty"`
+	OrigID        string    `json:"origID,omitempty"`
+	RemoteGroupID string    `json:"remoteGroupID,omitempty"`
+	LocalAddr     string    `json:"localAddr,omitempty"`
+	RemoteAddr    string    `json:"remoteAddr,omitempty"`
+	LocalMetrics  VqMetrics `json:"localMetrics,omitempty"`
+	RemoteMetrics VqMetrics `json:"remoteMetrics,omitempty"`
+	Extra         VqExtra   `json:"extra,omitempty"`
+}
+
+type VqMetrics struct {
+	StartTimestamp string `json:"startTimestamp,omitempty"`
+	StopTimestamp  string `json:"stopTimestamp,omitempty"`
+	SessionDesc    string `json:"sessionDesc,omitempty"`
+	JitterBuffer   string `json:"jitterBuffer,omitempty"`
+	PacketLoss     string `json:"packetLoss,omitempty"`
+	BurstGapLoss   string `json:"burstGapLoss,omitempty"`
+	Delay          string `json:"delay,omitempty"`
+	QualityEst     string `json:"qualityEst,omitempty"`
+	DialogID       string `json:"dialogID,omitempty"`
+}
+
+type VqExtra struct {
+	Latitude  string `json:"latitude,omitempty"`
+	Longitude string `json:"longitude,omitempty"`
+	Region    string `json:"region,omitempty"`
+	City      string `json:"city,omitempty"`
+	Customer  string `json:"customer,omitempty"`
+	System    string `json:"system,omitempty"`
+}
+
+/*func parseSipMsg(msg *sipparser.SipMsg) VqRtcpXr {
+
+	return nil
+}*/
+
 // LokiClient holds the configuration for the Loki client.
 type LokiClient struct {
 	PushURL  string // URL to Loki's push API
