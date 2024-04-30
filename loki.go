@@ -100,16 +100,16 @@ type SessionDesc struct {
 }
 
 type JitterBuffer struct {
-	Adaptive string `json:"adaptive,omitempty"` // indicates the jitter buffer in the endpoint ("0" - unknown; "1" - reserved; "2" - non-adaptive; "3" - adaptive)
-	Rate     string `json:"rate,omitempty"`
-	Nominal  string `json:"nominal,omitempty"`
-	Max      string `json:"max,omitempty"`
-	AbsMax   string `json:"absMax,omitempty"`
+	Adaptive int64 `json:"adaptive,omitempty"` // indicates the jitter buffer in the endpoint ("0" - unknown; "1" - reserved; "2" - non-adaptive; "3" - adaptive)
+	Rate     int64 `json:"rate,omitempty"`
+	Nominal  int64 `json:"nominal,omitempty"`
+	Max      int64 `json:"max,omitempty"`
+	AbsMax   int64 `json:"absMax,omitempty"`
 }
 
 type PacketLoss struct {
-	NetworkPacketLossRate   string `json:"networkPacketLossRate,omitempty"`
-	JitterBufferDiscardRate string `json:"jitterBufferDiscardRate,omitempty"`
+	NetworkPacketLossRate   float64 `json:"networkPacketLossRate,omitempty"`
+	JitterBufferDiscardRate float64 `json:"jitterBufferDiscardRate,omitempty"`
 }
 
 type BurstGapLoss struct {
@@ -153,15 +153,15 @@ func parseJitterBuffer(input string) JitterBuffer {
 		key, value := kv[0], kv[1]
 		switch key {
 		case "JBA":
-			jb.Adaptive = value
+			jb.Adaptive, _ = strconv.ParseInt(value, 10, 64)
 		case "JBR":
-			jb.Rate = value
+			jb.Rate, _ = strconv.ParseInt(value, 10, 64)
 		case "JBN":
-			jb.Nominal = value
+			jb.Nominal, _ = strconv.ParseInt(value, 10, 64)
 		case "JBM":
-			jb.Max = value
+			jb.Max, _ = strconv.ParseInt(value, 10, 64)
 		case "JBX":
-			jb.AbsMax = value
+			jb.AbsMax, _ = strconv.ParseInt(value, 10, 64)
 		}
 	}
 	return jb
@@ -175,9 +175,9 @@ func parsePacketLoss(input string) PacketLoss {
 		key, value := kv[0], kv[1]
 		switch key {
 		case "NLR":
-			pl.NetworkPacketLossRate = value
+			pl.NetworkPacketLossRate, _ = strconv.ParseFloat(value, 64)
 		case "JDR":
-			pl.JitterBufferDiscardRate = value
+			pl.JitterBufferDiscardRate, _ = strconv.ParseFloat(value, 64)
 		}
 	}
 	return pl
