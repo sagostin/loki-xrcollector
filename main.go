@@ -56,7 +56,6 @@ func main() {
 }
 
 func startUDP() {
-	log.Info("Starting UDP listener")
 	addrXR, err := net.ResolveUDPAddr("udp", cfg.CollectorAddressUDP)
 	if err != nil {
 		log.Fatalln(err)
@@ -73,9 +72,13 @@ func startUDP() {
 	go handleUDP(connXR, inXRCh)
 	go sendUDP(connXR, outXRCh)
 
+	log.Info("Starting UDP listener")
+
 	for packet := range inXRCh {
 		outXRCh <- packet
 	}
+
+	select {}
 }
 
 func startTLS() {
@@ -92,6 +95,8 @@ func startTLS() {
 	go recvTLS(listener, inXRCh)
 	go sendTLS(listener, outXRCh)
 	/*go sendHEP(connHEP, outHEPCh)*/
+
+	log.Info("Starting TLS listener")
 
 	for packet := range inXRCh {
 		outXRCh <- packet
