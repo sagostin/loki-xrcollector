@@ -51,7 +51,7 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		Longitude: geoIpRecord.Location.Longitude,
 		Country:   geoIpRecord.Country.Names["en"],
 		City:      geoIpRecord.City.Names["en"],
-		Region:    geoIpRecord.Subdivisions[0].Names["en"],
+		Region:    region,
 	}
 
 	marshal, err := json.Marshal(vqRtcpXr)
