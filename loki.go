@@ -42,8 +42,8 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 
 	vqRtcpXr := parseSipMsg(&sipMsg)
 	vqRtcpXr.Extra = VqExtra{
-		Latitude:  strconv.FormatFloat(geoIpRecord.Location.Latitude, 'f', -1, 64),
-		Longitude: strconv.FormatFloat(geoIpRecord.Location.Longitude, 'f', -1, 64),
+		Latitude:  geoIpRecord.Location.Latitude,
+		Longitude: geoIpRecord.Location.Longitude,
 		Country:   geoIpRecord.Country.Names["en"],
 		City:      geoIpRecord.City.Names["en"],
 		Region:    geoIpRecord.Subdivisions[0].Names["en"],
@@ -78,24 +78,233 @@ type VqRtcpXr struct {
 }
 
 type VqMetrics struct {
-	StartTimestamp string `json:"startTimestamp,omitempty"`
-	StopTimestamp  string `json:"stopTimestamp,omitempty"`
-	SessionDesc    string `json:"sessionDesc,omitempty"`
-	JitterBuffer   string `json:"jitterBuffer,omitempty"`
-	PacketLoss     string `json:"packetLoss,omitempty"`
-	BurstGapLoss   string `json:"burstGapLoss,omitempty"`
-	Delay          string `json:"delay,omitempty"`
-	QualityEst     string `json:"qualityEst,omitempty"`
+	StartTimestamp string       `json:"startTimestamp,omitempty"`
+	StopTimestamp  string       `json:"stopTimestamp,omitempty"`
+	SessionDesc    SessionDesc  `json:"sessionDesc,omitempty"`
+	JitterBuffer   JitterBuffer `json:"jitterBuffer,omitempty"`
+	PacketLoss     PacketLoss   `json:"packetLoss,omitempty"`
+	BurstGapLoss   BurstGapLoss `json:"burstGapLoss,omitempty"`
+	Delay          Delay        `json:"delay,omitempty"`
+	QualityEst     QualityEst   `json:"qualityEst,omitempty"`
+}
+
+type SessionDesc struct {
+	PayloadType             string `json:"payloadType,omitempty"`
+	PayloadDescription      string `json:"payloadDescription,omitempty"`
+	SampleRate              string `json:"sampleRate,omitempty"`
+	FrameDuration           string `json:"frameDuration,omitempty"`
+	FrameOctets             string `json:"frameOctets,omitempty"`
+	FramesPerPackets        string `json:"framesPerPackets,omitempty"`
+	PacketLossConcealment   string `json:"packetLossConcealment,omitempty"`
+	SilenceSuppressionState string `json:"silenceSuppressionState,omitempty"`
+}
+
+type JitterBuffer struct {
+	Adaptive string `json:"adaptive,omitempty"` // indicates the jitter buffer in the endpoint ("0" - unknown; "1" - reserved; "2" - non-adaptive; "3" - adaptive)
+	Rate     string `json:"rate,omitempty"`
+	Nominal  string `json:"nominal,omitempty"`
+	Max      string `json:"max,omitempty"`
+	AbsMax   string `json:"absMax,omitempty"`
+}
+
+type PacketLoss struct {
+	NetworkPacketLossRate   string `json:"networkPacketLossRate,omitempty"`
+	JitterBufferDiscardRate string `json:"jitterBufferDiscardRate,omitempty"`
+}
+
+type BurstGapLoss struct {
+	BurstLossDensity string `json:"burstLossDensity,omitempty"`
+	BurstDuration    string `json:"burstDuration,omitempty"`
+	GapLossDensity   string `json:"gapLossDensity,omitempty"`
+	GapDuration      string `json:"gapDuration,omitempty"`
+}
+
+type Delay struct {
+	RoundTrip          string `json:"roundTrip,omitempty"`
+	EndSystem          string `json:"endSystem,omitempty"`
+	OneWay             string `json:"oneWay,omitempty"`
+	InterArrivalJitter string `json:"interArrivalJitter,omitempty"`
+	MeanAbsoluteJitter string `json:"meanAbsoluteJitter,omitempty"`
+}
+
+type QualityEst struct {
+	ListeningQualityR      string `json:"listeningQualityR,omitempty"`
+	RLQEstAlg              string `json:"RLQEstAlg,omitempty"`
+	ConversationalQualityR string `json:"conversationalQualityR,omitempty"`
+	RCQEstAlg              string `json:"RCQEstAlg,omitempty"`
+	ExternalRIn            string `json:"externalRIn,omitempty"`
+	ExtRIEstAlg            string `json:"extRIEstAlg,omitempty"`
+	ExternalROut           string `json:"externalROut,omitempty"`
+	ExtROEstAlg            string `json:"extROEstAlg,omitempty"`
+	MOSLQ                  string `json:"MOSLQ,omitempty"`
+	MOSLQEstAlg            string `json:"MOSLQEstAlg,omitempty"`
+	MOSCQ                  string `json:"MOSCQ,omitempty"`
+	MOSCQEstAlg            string `json:"MOSCQEstAlg,omitempty"`
+	QoEEstAlg              string `json:"QoEEstAlg,omitempty"`
+}
+
+// Parsing functions
+func parseJitterBuffer(input string) JitterBuffer {
+	jb := JitterBuffer{}
+	parts := strings.Fields(input)
+	for _, part := range parts {
+		kv := strings.Split(part, "=")
+		key, value := kv[0], kv[1]
+		switch key {
+		case "JBA":
+			jb.Adaptive = value
+		case "JBR":
+			jb.Rate = value
+		case "JBN":
+			jb.Nominal = value
+		case "JBM":
+			jb.Max = value
+		case "JBX":
+			jb.AbsMax = value
+		}
+	}
+	return jb
+}
+
+func parsePacketLoss(input string) PacketLoss {
+	pl := PacketLoss{}
+	parts := strings.Fields(input)
+	for _, part := range parts {
+		kv := strings.Split(part, "=")
+		key, value := kv[0], kv[1]
+		switch key {
+		case "NLR":
+			pl.NetworkPacketLossRate = value
+		case "JDR":
+			pl.JitterBufferDiscardRate = value
+		}
+	}
+	return pl
+}
+
+func parseBurstGapLoss(input string) BurstGapLoss {
+	bgl := BurstGapLoss{}
+	parts := strings.Fields(input)
+	for _, part := range parts {
+		kv := strings.Split(part, "=")
+		key, value := kv[0], kv[1]
+		switch key {
+		case "BLD":
+			bgl.BurstLossDensity = value
+		case "BD":
+			bgl.BurstDuration = value
+		case "GLD":
+			bgl.GapLossDensity = value
+		case "GD":
+			bgl.GapDuration = value
+		}
+	}
+	return bgl
+}
+
+func parseDelay(input string) Delay {
+	d := Delay{}
+	parts := strings.Fields(input)
+	for _, part := range parts {
+		kv := strings.Split(part, "=")
+		key, value := kv[0], kv[1]
+		switch key {
+		case "RTD":
+			d.RoundTrip = value
+		case "ESD":
+			d.EndSystem = value
+		case "OWD":
+			d.OneWay = value
+		case "IAJ":
+			d.InterArrivalJitter = value
+		case "MAJ":
+			d.MeanAbsoluteJitter = value
+		}
+	}
+	return d
+}
+
+func parseQualityEst(input string) QualityEst {
+	qe := QualityEst{}
+	parts := strings.Fields(input)
+	for _, part := range parts {
+		kv := strings.Split(part, "=")
+		key, value := kv[0], kv[1]
+		switch key {
+		case "RLQ":
+			qe.ListeningQualityR = value
+		case "RLQEstAlg":
+			qe.RLQEstAlg = value
+		case "RCQ":
+			qe.ConversationalQualityR = value
+		case "RCQEstAlg":
+			qe.RCQEstAlg = value
+		case "EXTRI":
+			qe.ExternalRIn = value
+		case "ExtRIEstAlg":
+			qe.ExtRIEstAlg = value
+		case "EXTRO":
+			qe.ExternalROut = value
+		case "ExtROEstAlg":
+			qe.ExtROEstAlg = value
+		case "MOSLQ":
+			qe.MOSLQ = value
+		case "MOSLQEstAlg":
+			qe.MOSLQEstAlg = value
+		case "MOSCQ":
+			qe.MOSCQ = value
+		case "MOSCQEstAlg":
+			qe.MOSCQEstAlg = value
+		case "QoEEstAlg":
+			qe.QoEEstAlg = value
+		}
+	}
+	return qe
+}
+
+func parseSessionDesc(line string) SessionDesc {
+	desc := SessionDesc{}
+	parts := strings.Fields(line) // Split the string by space
+
+	// Iterate over parts and parse each key-value pair
+	for _, part := range parts {
+		kv := strings.Split(part, "=")
+		if len(kv) != 2 {
+			continue // skip if the part does not contain key and value
+		}
+		key, value := kv[0], kv[1]
+
+		switch key {
+		case "PT":
+			desc.PayloadType = value
+		case "PD":
+			desc.PayloadDescription = value
+		case "SR":
+			desc.SampleRate = value
+		case "FD":
+			desc.FrameDuration = value
+		case "FO":
+			desc.FrameOctets = value
+		case "FPP":
+			desc.FramesPerPackets = value
+		case "PLC":
+			desc.PacketLossConcealment = value
+		case "SSUP":
+			desc.SilenceSuppressionState = value
+		}
+	}
+
+	return desc
 }
 
 type VqExtra struct {
-	Latitude  string `json:"latitude,omitempty"`
-	Longitude string `json:"longitude,omitempty"`
-	Country   string `json:"country,omitempty"`
-	City      string `json:"city,omitempty"`
-	Region    string `json:"region,omitempty"`
-	Customer  string `json:"customer,omitempty"` // look up using external API that we store for a period?
-	System    string `json:"system,omitempty"`   // look up using external API that we store for a period?
+	Latitude  float64 `json:"latitude,omitempty"`
+	Longitude float64 `json:"longitude,omitempty"`
+	Country   string  `json:"country,omitempty"`
+	City      string  `json:"city,omitempty"`
+	Region    string  `json:"region,omitempty"`
+	Customer  string  `json:"customer,omitempty"` // look up using external API that we store for a period?
+	System    string  `json:"system,omitempty"`   // look up using external API that we store for a period?
 }
 
 func parseSipMsg(sipMsg *sipparser.SipMsg) VqRtcpXr {
@@ -180,17 +389,17 @@ func parseMetricLines(line, prefix string, metric *VqMetrics) {
 			metric.StartTimestamp = start
 			metric.StopTimestamp = stop
 		case "SessionDesc":
-			metric.SessionDesc = value
+			metric.SessionDesc = parseSessionDesc(value)
 		case "JitterBuffer":
-			metric.JitterBuffer = value
+			metric.JitterBuffer = parseJitterBuffer(value)
 		case "PacketLoss":
-			metric.PacketLoss = value
+			metric.PacketLoss = parsePacketLoss(value)
 		case "BurstGapLoss":
-			metric.BurstGapLoss = value
+			metric.BurstGapLoss = parseBurstGapLoss(value)
 		case "Delay":
-			metric.Delay = value
+			metric.Delay = parseDelay(value)
 		case "QualityEst":
-			metric.QualityEst = value
+			metric.QualityEst = parseQualityEst(value)
 		}
 	}
 }
