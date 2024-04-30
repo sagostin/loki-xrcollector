@@ -151,6 +151,9 @@ func parseSipMsg(sipMsg *sipparser.SipMsg) VqRtcpXr {
 
 	}
 
+	vqRtcpXr.LocalMetrics = localMetrics
+	vqRtcpXr.RemoteMetrics = remoteMetrics
+
 	return vqRtcpXr
 }
 
@@ -160,7 +163,7 @@ func parseMetricLines(line, prefix string, metric *VqMetrics) {
 
 		switch prefix {
 		case "Timestamps":
-			parts := strings.Split(line, " ")
+			parts := strings.Split(value, " ")
 			start := strings.Split(parts[0], "=")[1]
 			stop := strings.Split(parts[1], "=")[1]
 			metric.StartTimestamp = start
