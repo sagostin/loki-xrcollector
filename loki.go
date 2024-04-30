@@ -27,6 +27,8 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 	var region string
 	if len(geoIpRecord.Subdivisions) > 0 {
 		region = geoIpRecord.Subdivisions[0].Names["en"]
+	} else if len(geoIpRecord.Subdivisions) > 1 {
+		log.Warn("Sender has multiple subdivisions/regions: ", geoIpRecord.Subdivisions)
 	}
 
 	labels := map[string]string{
@@ -42,8 +44,6 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		"long": geoIpRecord.Location.Longitude,
 		"customer": "todo using connectwise",*/
 	}
-
-	log.Info("Sender has multiple subdivisions/regions: ", geoIpRecord.Subdivisions)
 
 	vqRtcpXr := parseSipMsg(&sipMsg)
 	vqRtcpXr.Extra = VqExtra{
