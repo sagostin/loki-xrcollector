@@ -24,13 +24,18 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 
 	// todo grab customer / info based on device MAC using cached list of devices using ConnectWise linker
 
+	var region string
+	if len(geoIpRecord.Subdivisions) > 0 {
+		region = geoIpRecord.Subdivisions[0].Names["en"]
+	}
+
 	labels := map[string]string{
 		"job":        "vqrtcpxr",
 		"device":     device,
 		"lan_addr":   lanAddr,
 		"wan_addr":   ip.String(),
 		"city":       geoIpRecord.City.Names["en"],
-		"region":     geoIpRecord.Subdivisions[0].Names["en"],
+		"region":     region,
 		"country":    geoIpRecord.Country.Names["en"],
 		"user_agent": sipMsg.UserAgent,
 		/*"lat": geoIpRecord.Location.Latitude,
