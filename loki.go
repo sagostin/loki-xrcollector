@@ -38,6 +38,12 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 	}
 
 	vqRtcpXr := parseSipMsg(&sipMsg)
+	vqRtcpXr.Extra = VqExtra{
+		Latitude:  strconv.FormatFloat(geoIpRecord.Location.Latitude, 'f', -1, 64),
+		Longitude: strconv.FormatFloat(geoIpRecord.Location.Longitude, 'f', -1, 64),
+		Country:   geoIpRecord.Country.Names["en"],
+		City:      geoIpRecord.City.Names["en"],
+	}
 
 	marshal, err := json.Marshal(vqRtcpXr)
 	if err != nil {
@@ -81,7 +87,7 @@ type VqMetrics struct {
 type VqExtra struct {
 	Latitude  string `json:"latitude,omitempty"`
 	Longitude string `json:"longitude,omitempty"`
-	Region    string `json:"region,omitempty"`
+	Country   string `json:"country,omitempty"`
 	City      string `json:"city,omitempty"`
 	Customer  string `json:"customer,omitempty"` // look up using external API that we store for a period?
 	System    string `json:"system,omitempty"`   // look up using external API that we store for a period?
