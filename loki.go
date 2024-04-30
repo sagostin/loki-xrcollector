@@ -30,15 +30,23 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		"lan_addr":   lanAddr,
 		"wan_addr":   ip.String(),
 		"city":       geoIpRecord.City.Names["en"],
+		"country":    geoIpRecord.Country.Names["en"],
 		"user_agent": sipMsg.UserAgent,
 		/*"lat": geoIpRecord.Location.Latitude,
 		"long": geoIpRecord.Location.Longitude,
 		"customer": "todo using connectwise",*/
 	}
 
+	vqRtcpXr := parseSipMsg(&sipMsg)
+
+	marshal, err := json.Marshal(vqRtcpXr)
+	if err != nil {
+		return err
+	}
+
 	logEntry := LogEntry{
 		Timestamp: strconv.FormatInt(time.Now().UnixNano(), 10), // todo handle time better?
-		Line:      sipMsg.Body,
+		Line:      string(marshal),
 	}
 
 	return lokiClient.PushLog(labels, logEntry)
@@ -56,6 +64,7 @@ type VqRtcpXr struct {
 	LocalMetrics  VqMetrics `json:"localMetrics,omitempty"`
 	RemoteMetrics VqMetrics `json:"remoteMetrics,omitempty"`
 	Extra         VqExtra   `json:"extra,omitempty"`
+	DialogID      string    `json:"dialogID,omitempty"`
 }
 
 type VqMetrics struct {
@@ -67,7 +76,6 @@ type VqMetrics struct {
 	BurstGapLoss   string `json:"burstGapLoss,omitempty"`
 	Delay          string `json:"delay,omitempty"`
 	QualityEst     string `json:"qualityEst,omitempty"`
-	DialogID       string `json:"dialogID,omitempty"`
 }
 
 type VqExtra struct {
@@ -75,14 +83,127 @@ type VqExtra struct {
 	Longitude string `json:"longitude,omitempty"`
 	Region    string `json:"region,omitempty"`
 	City      string `json:"city,omitempty"`
-	Customer  string `json:"customer,omitempty"`
-	System    string `json:"system,omitempty"`
+	Customer  string `json:"customer,omitempty"` // look up using external API that we store for a period?
+	System    string `json:"system,omitempty"`   // look up using external API that we store for a period?
 }
 
-/*func parseSipMsg(msg *sipparser.SipMsg) VqRtcpXr {
+func parseSipMsg(sipMsg *sipparser.SipMsg) VqRtcpXr {
 
-	return nil
-}*/
+	replaceRLine := strings.Replace(sipMsg.Body, "\r", "", -1)
+	msg := strings.Split(replaceRLine, "\n")
+
+	var state = "start"
+
+	var vqRtcpXr = VqRtcpXr{}
+	var localMetrics = VqMetrics{}
+	var remoteMetrics = VqMetrics{}
+
+	for _, line := range msg {
+		// runs when we haven't processed anything else
+		if state == "start" {
+			if strings.HasPrefix(line, "VQSessionReport") || strings.HasPrefix(line, "VQAlertReport") {
+				vqReport := strings.Split(line, ":")[1]
+				vqReport = strings.TrimSpace(vqReport)
+				fmt.Println("vqReport: ", vqReport)
+				vqRtcpXr.VqReport = vqReport
+				continue
+			}
+
+			parseMainLines(line, "VQSessionReport", &vqRtcpXr)
+			parseMainLines(line, "VQAlertReport", &vqRtcpXr)
+			parseMainLines(line, "CallID", &vqRtcpXr)
+			parseMainLines(line, "LocalID", &vqRtcpXr)
+			parseMainLines(line, "RemoteID", &vqRtcpXr)
+			parseMainLines(line, "OrigID", &vqRtcpXr)
+			parseMainLines(line, "RemoteGroupID", &vqRtcpXr)
+			parseMainLines(line, "LocalAddr", &vqRtcpXr)
+			parseMainLines(line, "RemoteAddr", &vqRtcpXr)
+		}
+
+		parseMainLines(line, "DialogID", &vqRtcpXr)
+
+		if strings.HasPrefix(line, "LocalMetrics") {
+			state = "localMetrics"
+			continue
+		}
+
+		if strings.HasPrefix(line, "RemoteMetrics") {
+			state = "remoteMetrics"
+			continue
+		}
+
+		var interfaceToUse *VqMetrics
+		if state == "localMetrics" {
+			interfaceToUse = &localMetrics
+		} else if state == "remoteMetrics" {
+			interfaceToUse = &remoteMetrics
+		}
+
+		parseMetricLines(line, "Timestamps", interfaceToUse)
+		parseMetricLines(line, "SessionDesc", interfaceToUse)
+		parseMetricLines(line, "JitterBuffer", interfaceToUse)
+		parseMetricLines(line, "PacketLoss", interfaceToUse)
+		parseMetricLines(line, "BurstGapLoss", interfaceToUse)
+		parseMetricLines(line, "Delay", interfaceToUse)
+		parseMetricLines(line, "QualityEst", interfaceToUse)
+
+		continue
+
+	}
+
+	return vqRtcpXr
+}
+
+func parseMetricLines(line, prefix string, metric *VqMetrics) {
+	if strings.HasPrefix(line, prefix) {
+		value := strings.TrimSpace(strings.TrimPrefix(line, prefix+":"))
+
+		switch prefix {
+		case "Timestamps":
+			parts := strings.Split(line, " ")
+			start := strings.Split(parts[0], "=")[1]
+			stop := strings.Split(parts[1], "=")[1]
+			metric.StartTimestamp = start
+			metric.StopTimestamp = stop
+		case "SessionDesc":
+			metric.SessionDesc = value
+		case "JitterBuffer":
+			metric.JitterBuffer = value
+		case "PacketLoss":
+			metric.PacketLoss = value
+		case "BurstGapLoss":
+			metric.BurstGapLoss = value
+		case "Delay":
+			metric.Delay = value
+		case "QualityEst":
+			metric.QualityEst = value
+		}
+	}
+}
+
+func parseMainLines(line, prefix string, report *VqRtcpXr) {
+	if strings.HasPrefix(line, prefix) {
+		value := strings.TrimSpace(strings.TrimPrefix(line, prefix+":"))
+		switch prefix {
+		case "VQSessionReport", "VQAlertReport":
+			report.VqReport = value
+		case "CallID":
+			report.CallID = value
+		case "LocalID":
+			report.LocalID = value
+		case "RemoteID":
+			report.RemoteID = value
+		case "OrigID":
+			report.OrigID = value
+		case "RemoteGroupID":
+			report.RemoteGroupID = value
+		case "LocalAddr":
+			report.LocalAddr = value
+		case "RemoteAddr":
+			report.RemoteAddr = value
+		}
+	}
+}
 
 // LokiClient holds the configuration for the Loki client.
 type LokiClient struct {
