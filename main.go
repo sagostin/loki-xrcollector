@@ -34,7 +34,7 @@ func init() {
 
 	/*flag.StringVar(&cfg.HepServerAddress, "hs", "127.0.0.1:9060", "HEP server address over TLS")*/
 	flag.StringVar(&cfg.CollectorAddressTLS, "tls", ":7060", "XR collector TLS listen address")
-	flag.StringVar(&cfg.CollectorAddressTLS, "udp", ":7060", "XR collector UDP listen address")
+	flag.StringVar(&cfg.CollectorAddressUDP, "udp", ":7060", "XR collector UDP listen address")
 	flag.BoolVar(&cfg.Debug, "debug", true, "Log with debug level")
 
 	flag.StringVar(&lokiURL, "lokiURL", "", "URL to Loki's push API")
