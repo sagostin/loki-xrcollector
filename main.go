@@ -47,7 +47,8 @@ func init() {
 	flag.StringVar(&lokiUser, "lokiUser", "", "Username for Loki")
 	flag.StringVar(&lokiPass, "lokiPass", "", "Password for Loki")
 	flag.StringVar(&cfg.GeoIpFile, "geoIpDB", "./GeoLite2-City.mmdb", "Path to GeoIP2 database")
-	flag.BoolVar(&cfg.DeviceLookup, "deviceLookup", true, "Lookup device information in MAC database") // will enable grabbing of device information from ConnectWise
+	flag.BoolVar(&cfg.DeviceLookup, "deviceLookup", true, "Lookup device information in MAC database")
+	flag.StringVar(&cfg.DeviceLookupAuth, "deviceLookupAuth", "admin:admin", "Lookup device information basic auth creds") // will enable grabbing of device information from ConnectWise
 	flag.StringVar(&cfg.DeviceLookupURL, "deviceLookupURL", "http://localhost:8080", "URL to device lookup service")
 
 	flag.Parse()
