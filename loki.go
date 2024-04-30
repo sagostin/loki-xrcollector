@@ -89,13 +89,13 @@ type VqMetrics struct {
 }
 
 type SessionDesc struct {
-	PayloadType             string `json:"payloadType,omitempty"`
+	PayloadType             int64  `json:"payloadType,omitempty"`
 	PayloadDescription      string `json:"payloadDescription,omitempty"`
-	SampleRate              string `json:"sampleRate,omitempty"`
-	FrameDuration           string `json:"frameDuration,omitempty"`
-	FrameOctets             string `json:"frameOctets,omitempty"`
-	FramesPerPackets        string `json:"framesPerPackets,omitempty"`
-	PacketLossConcealment   string `json:"packetLossConcealment,omitempty"`
+	SampleRate              int64  `json:"sampleRate,omitempty"`
+	FrameDuration           int64  `json:"frameDuration,omitempty"`
+	FrameOctets             int64  `json:"frameOctets,omitempty"`
+	FramesPerPackets        int64  `json:"framesPerPackets,omitempty"`
+	PacketLossConcealment   int64  `json:"packetLossConcealment,omitempty"`
 	SilenceSuppressionState string `json:"silenceSuppressionState,omitempty"`
 }
 
@@ -113,34 +113,35 @@ type PacketLoss struct {
 }
 
 type BurstGapLoss struct {
-	BurstLossDensity string `json:"burstLossDensity,omitempty"`
-	BurstDuration    string `json:"burstDuration,omitempty"`
-	GapLossDensity   string `json:"gapLossDensity,omitempty"`
-	GapDuration      string `json:"gapDuration,omitempty"`
+	BurstLossDensity float64 `json:"burstLossDensity,omitempty"`
+	BurstDuration    int64   `json:"burstDuration,omitempty"`
+	GapLossDensity   float64 `json:"gapLossDensity,omitempty"`
+	GapDuration      int64   `json:"gapDuration,omitempty"`
+	GapMin           int64   `json:"gapMin,omitempty"`
 }
 
 type Delay struct {
-	RoundTrip          string `json:"roundTrip,omitempty"`
-	EndSystem          string `json:"endSystem,omitempty"`
-	OneWay             string `json:"oneWay,omitempty"`
-	InterArrivalJitter string `json:"interArrivalJitter,omitempty"`
-	MeanAbsoluteJitter string `json:"meanAbsoluteJitter,omitempty"`
+	RoundTrip          int64 `json:"roundTrip,omitempty"`
+	EndSystem          int64 `json:"endSystem,omitempty"`
+	OneWay             int64 `json:"oneWay,omitempty"`
+	InterArrivalJitter int64 `json:"interArrivalJitter,omitempty"`
+	MeanAbsoluteJitter int64 `json:"meanAbsoluteJitter,omitempty"`
 }
 
 type QualityEst struct {
-	ListeningQualityR      string `json:"listeningQualityR,omitempty"`
-	RLQEstAlg              string `json:"RLQEstAlg,omitempty"`
-	ConversationalQualityR string `json:"conversationalQualityR,omitempty"`
-	RCQEstAlg              string `json:"RCQEstAlg,omitempty"`
-	ExternalRIn            string `json:"externalRIn,omitempty"`
-	ExtRIEstAlg            string `json:"extRIEstAlg,omitempty"`
-	ExternalROut           string `json:"externalROut,omitempty"`
-	ExtROEstAlg            string `json:"extROEstAlg,omitempty"`
-	MOSLQ                  string `json:"MOSLQ,omitempty"`
-	MOSLQEstAlg            string `json:"MOSLQEstAlg,omitempty"`
-	MOSCQ                  string `json:"MOSCQ,omitempty"`
-	MOSCQEstAlg            string `json:"MOSCQEstAlg,omitempty"`
-	QoEEstAlg              string `json:"QoEEstAlg,omitempty"`
+	RListeningQuality      int64   `json:"rListeningQuality,omitempty"`
+	RLQEstAlg              string  `json:"RLQEstAlg,omitempty"`
+	RConversationalQuality int64   `json:"rConversationalQuality,omitempty"`
+	RCQEstAlg              string  `json:"RCQEstAlg,omitempty"`
+	ExternalRIn            int64   `json:"externalRIn,omitempty"`
+	ExtRIEstAlg            string  `json:"extRIEstAlg,omitempty"`
+	ExternalROut           int64   `json:"externalROut,omitempty"`
+	ExtROEstAlg            string  `json:"extROEstAlg,omitempty"`
+	MOSLQ                  float64 `json:"MOSLQ,omitempty"`
+	MOSLQEstAlg            string  `json:"MOSLQEstAlg,omitempty"`
+	MOSCQ                  float64 `json:"MOSCQ,omitempty"`
+	MOSCQEstAlg            string  `json:"MOSCQEstAlg,omitempty"`
+	QoEEstAlg              string  `json:"QoEEstAlg,omitempty"`
 }
 
 // Parsing functions
@@ -190,13 +191,15 @@ func parseBurstGapLoss(input string) BurstGapLoss {
 		key, value := kv[0], kv[1]
 		switch key {
 		case "BLD":
-			bgl.BurstLossDensity = value
+			bgl.BurstLossDensity, _ = strconv.ParseFloat(value, 64)
 		case "BD":
-			bgl.BurstDuration = value
+			bgl.BurstDuration, _ = strconv.ParseInt(value, 10, 64)
 		case "GLD":
-			bgl.GapLossDensity = value
+			bgl.GapLossDensity, _ = strconv.ParseFloat(value, 64)
 		case "GD":
-			bgl.GapDuration = value
+			bgl.GapDuration, _ = strconv.ParseInt(value, 10, 64)
+		case "GMIN":
+			bgl.GapMin, _ = strconv.ParseInt(value, 10, 64)
 		}
 	}
 	return bgl
@@ -210,15 +213,15 @@ func parseDelay(input string) Delay {
 		key, value := kv[0], kv[1]
 		switch key {
 		case "RTD":
-			d.RoundTrip = value
+			d.RoundTrip, _ = strconv.ParseInt(value, 10, 64)
 		case "ESD":
-			d.EndSystem = value
+			d.EndSystem, _ = strconv.ParseInt(value, 10, 64)
 		case "OWD":
-			d.OneWay = value
+			d.OneWay, _ = strconv.ParseInt(value, 10, 64)
 		case "IAJ":
-			d.InterArrivalJitter = value
+			d.InterArrivalJitter, _ = strconv.ParseInt(value, 10, 64)
 		case "MAJ":
-			d.MeanAbsoluteJitter = value
+			d.MeanAbsoluteJitter, _ = strconv.ParseInt(value, 10, 64)
 		}
 	}
 	return d
@@ -232,27 +235,27 @@ func parseQualityEst(input string) QualityEst {
 		key, value := kv[0], kv[1]
 		switch key {
 		case "RLQ":
-			qe.ListeningQualityR = value
+			qe.RListeningQuality, _ = strconv.ParseInt(value, 10, 64)
 		case "RLQEstAlg":
 			qe.RLQEstAlg = value
 		case "RCQ":
-			qe.ConversationalQualityR = value
+			qe.RConversationalQuality, _ = strconv.ParseInt(value, 10, 64)
 		case "RCQEstAlg":
 			qe.RCQEstAlg = value
 		case "EXTRI":
-			qe.ExternalRIn = value
+			qe.ExternalRIn, _ = strconv.ParseInt(value, 10, 64)
 		case "ExtRIEstAlg":
 			qe.ExtRIEstAlg = value
 		case "EXTRO":
-			qe.ExternalROut = value
+			qe.ExternalROut, _ = strconv.ParseInt(value, 10, 64)
 		case "ExtROEstAlg":
 			qe.ExtROEstAlg = value
 		case "MOSLQ":
-			qe.MOSLQ = value
+			qe.MOSLQ, _ = strconv.ParseFloat(value, 64)
 		case "MOSLQEstAlg":
 			qe.MOSLQEstAlg = value
 		case "MOSCQ":
-			qe.MOSCQ = value
+			qe.MOSCQ, _ = strconv.ParseFloat(value, 64)
 		case "MOSCQEstAlg":
 			qe.MOSCQEstAlg = value
 		case "QoEEstAlg":
@@ -276,19 +279,19 @@ func parseSessionDesc(line string) SessionDesc {
 
 		switch key {
 		case "PT":
-			desc.PayloadType = value
+			desc.PayloadType, _ = strconv.ParseInt(value, 10, 64)
 		case "PD":
 			desc.PayloadDescription = value
 		case "SR":
-			desc.SampleRate = value
+			desc.SampleRate, _ = strconv.ParseInt(value, 10, 64)
 		case "FD":
-			desc.FrameDuration = value
+			desc.FrameDuration, _ = strconv.ParseInt(value, 10, 64)
 		case "FO":
-			desc.FrameOctets = value
+			desc.FrameOctets, _ = strconv.ParseInt(value, 10, 64)
 		case "FPP":
-			desc.FramesPerPackets = value
+			desc.FramesPerPackets, _ = strconv.ParseInt(value, 10, 64)
 		case "PLC":
-			desc.PacketLossConcealment = value
+			desc.PacketLossConcealment, _ = strconv.ParseInt(value, 10, 64)
 		case "SSUP":
 			desc.SilenceSuppressionState = value
 		}
