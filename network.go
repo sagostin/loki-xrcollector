@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-func sendXR(listener net.Listener, outXRCh chan XRPacket) {
+func sendTLS(listener net.Listener, outXRCh chan XRPacketTLS) {
 	for packet := range outXRCh {
 		conn, err := listener.Accept()
 		if err != nil {
