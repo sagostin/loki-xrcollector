@@ -63,7 +63,7 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 }
 
 type VqRtcpXr struct {
-	VqReport      string    `json:"vqReport,omitempty"` // this is the header for if it is an alert or call term type
+	VqReport      VqReport  `json:"vqReport,omitempty"` // this is the header for if it is an alert or call term type
 	CallID        string    `json:"callID,omitempty"`
 	LocalID       string    `json:"localID,omitempty"`
 	RemoteID      string    `json:"remoteID,omitempty"`
@@ -86,6 +86,14 @@ type VqMetrics struct {
 	BurstGapLoss   BurstGapLoss `json:"burstGapLoss,omitempty"`
 	Delay          Delay        `json:"delay,omitempty"`
 	QualityEst     QualityEst   `json:"qualityEst,omitempty"`
+}
+
+type VqReport struct {
+	Name       string `json:"name,omitempty"`
+	ReportType string `json:"reportType,omitempty"`
+	AlertType  string `json:"alertType,omitempty"`
+	Severity   string `json:"severity,omitempty"`
+	Dir        string `json:"dir,omitempty"`
 }
 
 type SessionDesc struct {
@@ -142,6 +150,31 @@ type QualityEst struct {
 	MOSCQ                  float64 `json:"MOSCQ,omitempty"`
 	MOSCQEstAlg            string  `json:"MOSCQEstAlg,omitempty"`
 	QoEEstAlg              string  `json:"QoEEstAlg,omitempty"`
+}
+
+// Parsing functions
+func parseVqReport(input string) VqReport {
+	jb := VqReport{}
+
+	if input == "CallTerm" {
+		jb.ReportType = "CallTerm"
+	} else {
+		jb.ReportType = "Alert"
+		parts := strings.Fields(input)
+		for _, part := range parts {
+			kv := strings.Split(part, "=")
+			key, value := kv[0], kv[1]
+			switch key {
+			case "Type":
+				jb.AlertType = value
+			case "Severity":
+				jb.Severity = value
+			case "Dir":
+				jb.Dir = value
+			}
+		}
+	}
+	return jb
 }
 
 // Parsing functions
@@ -327,8 +360,10 @@ func parseSipMsg(sipMsg *sipparser.SipMsg) VqRtcpXr {
 			if strings.HasPrefix(line, "VQSessionReport") || strings.HasPrefix(line, "VQAlertReport") {
 				vqReport := strings.Split(line, ":")[1]
 				vqReport = strings.TrimSpace(vqReport)
-				fmt.Println("vqReport: ", vqReport)
-				vqRtcpXr.VqReport = vqReport
+				report := parseVqReport(vqReport)
+				vqRtcpXr.VqReport = report
+
+				// need to handle the CallTerm portion if doesn't contain VQ Alert Report???!??
 				continue
 			}
 
@@ -411,8 +446,6 @@ func parseMainLines(line, prefix string, report *VqRtcpXr) {
 	if strings.HasPrefix(line, prefix) {
 		value := strings.TrimSpace(strings.TrimPrefix(line, prefix+":"))
 		switch prefix {
-		case "VQSessionReport", "VQAlertReport":
-			report.VqReport = value
 		case "CallID":
 			report.CallID = value
 		case "LocalID":
