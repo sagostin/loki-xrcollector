@@ -9,6 +9,7 @@ type config struct {
 	GeoIpFile           string
 	DeviceLookup        bool
 	DeviceLookupURL     string
+	DeviceLookupAuth    string
 	HepNodeID           uint
 	Debug               bool
 }

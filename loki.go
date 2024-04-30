@@ -31,6 +31,18 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		log.Warn("Sender has multiple subdivisions/regions: ", geoIpRecord.Subdivisions)
 	}
 
+	systemHosts := ""
+
+	if cfg.DeviceLookup {
+		for n, dev := range deviceCacheMap[device] {
+			if n == len(deviceCacheMap[device])-1 {
+				systemHosts += dev
+			} else {
+				systemHosts += dev + ","
+			}
+		}
+	}
+
 	labels := map[string]string{
 		"job":        "vqrtcpxr",
 		"device":     device,
@@ -52,6 +64,7 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		Country:   geoIpRecord.Country.Names["en"],
 		City:      geoIpRecord.City.Names["en"],
 		Region:    region,
+		System:    systemHosts,
 	}
 
 	marshal, err := json.Marshal(vqRtcpXr)

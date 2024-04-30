@@ -2,12 +2,18 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/oschwald/geoip2-golang"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 // XRPacketTLS holds UDP data and address, updated to TCP for TLS
@@ -55,6 +61,25 @@ var lokiURL, lokiUser, lokiPass string
 var lokiClient *LokiClient
 
 func main() {
+	deviceCacheMap = make(map[string][]string)
+
+	ticker := time.NewTicker(8 * time.Hour)
+	defer ticker.Stop()
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				// Fetch and zultysHostedCache the companies every tick
+				log.Info("Fetching devices for cache")
+				err := fetchDevices()
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}()
+
 	db, err := geoip2.Open(cfg.GeoIpFile)
 	if err != nil {
 		log.Fatal(err)
@@ -128,4 +153,50 @@ func loadTLSConfig() *tls.Config {
 	return &tls.Config{
 		Certificates: []tls.Certificate{cert},
 	}
+}
+
+var deviceCacheMap map[string][]string
+
+func fetchDevices() error {
+	// Create a new request
+	req, err := http.NewRequest("GET", cfg.DeviceLookupURL, nil)
+	if err != nil {
+		return fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	auth := strings.Split(cfg.DeviceLookupAuth, ":")
+
+	// Set basic auth if credentials are provided
+	if auth[0] != "" && auth[1] != "" {
+		req.SetBasicAuth(auth[0], auth[1])
+	}
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error sending request to DeviceLookup: %w", err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+
+	responseBody, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("DeviceLookup response:", string(responseBody)) // Print response body for debugging
+
+	err = json.Unmarshal(responseBody, &deviceCacheMap)
+	if err != nil {
+		return err
+	}
+
+	// Check the response status code
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("received non-200 response status: %d", resp.StatusCode)
+	}
+
+	return nil
 }
