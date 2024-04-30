@@ -26,6 +26,12 @@ func handleUDP(conn *net.UDPConn, inXRCh chan XRPacketUDP) {
 		if n >= maxPktSize {
 			log.Printf("Warning received packet from %s exceeds %d bytes\n", addr, maxPktSize)
 		}
+		if n == 0 {
+			if cfg.Debug {
+				log.Printf("Received empty packet from %s\n", conn.RemoteAddr())
+			}
+			continue
+		}
 		if cfg.Debug {
 			log.Printf("Received following RTCP-XR report with %d bytes from %s:\n%s\n", n, addr, string(data))
 		} else {
@@ -70,6 +76,12 @@ func handleTLS(conn net.Conn, inXRCh chan XRPacketTLS) {
 		data := buffer[:n]
 		if n >= maxPktSize {
 			log.Printf("Warning received packet from %s exceeds %d bytes\n", conn.RemoteAddr(), maxPktSize)
+		}
+		if n == 0 {
+			if cfg.Debug {
+				log.Printf("Received empty packet from %s\n", conn.RemoteAddr())
+			}
+			continue
 		}
 		if cfg.Debug {
 			log.Printf("Received following RTCP-XR report with %d bytes from %s:\n%s\n", n, conn.RemoteAddr(), string(data))
