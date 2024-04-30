@@ -81,6 +81,12 @@ func main() {
 		}
 	}()
 
+	log.Info("Fetching devices for cache")
+	err := fetchDevices()
+	if err != nil {
+		log.Error(err)
+	}
+
 	db, err := geoip2.Open(cfg.GeoIpFile)
 	if err != nil {
 		log.Fatal(err)
