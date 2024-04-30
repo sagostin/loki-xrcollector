@@ -65,6 +65,8 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		City:      geoIpRecord.City.Names["en"],
 		Region:    region,
 		System:    systemHosts,
+		UserAgent: sipMsg.UserAgent,
+		DeviceMAC: device,
 	}
 
 	marshal, err := json.Marshal(vqRtcpXr)
@@ -357,8 +359,9 @@ type VqExtra struct {
 	Country   string  `json:"country,omitempty"`
 	City      string  `json:"city,omitempty"`
 	Region    string  `json:"region,omitempty"`
-	Customer  string  `json:"customer,omitempty"` // look up using external API that we store for a period?
-	System    string  `json:"system,omitempty"`   // look up using external API that we store for a period?
+	UserAgent string  `json:"userAgent,omitempty"`
+	DeviceMAC string  `json:"deviceMAC,omitempty"`
+	System    string  `json:"system,omitempty"` // look up using external API that we store for a period?
 }
 
 func parseSipMsg(sipMsg *sipparser.SipMsg) VqRtcpXr {
