@@ -25,11 +25,12 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 	// todo grab customer / info based on device MAC using cached list of devices using ConnectWise linker
 
 	labels := map[string]string{
-		"job":      "vqrtcpxr",
-		"device":   device,
-		"lan_addr": lanAddr,
-		"wan_addr": ip.String(),
-		"city":     geoIpRecord.City.Names["en"],
+		"job":        "vqrtcpxr",
+		"device":     device,
+		"lan_addr":   lanAddr,
+		"wan_addr":   ip.String(),
+		"city":       geoIpRecord.City.Names["en"],
+		"user_agent": sipMsg.UserAgent,
 		/*"lat": geoIpRecord.Location.Latitude,
 		"long": geoIpRecord.Location.Longitude,
 		"customer": "todo using connectwise",*/
@@ -44,7 +45,7 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 }
 
 type VqRtcpXr struct {
-	VqReport      string    `json:"vqReport,omitempty"`
+	VqReport      string    `json:"vqReport,omitempty"` // this is the header for if it is an alert or call term type
 	CallID        string    `json:"callID,omitempty"`
 	LocalID       string    `json:"localID,omitempty"`
 	RemoteID      string    `json:"remoteID,omitempty"`
