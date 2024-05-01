@@ -77,6 +77,8 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		System:    systemHosts,
 		UserAgent: sipMsg.UserAgent,
 		DeviceMAC: device,
+		ASN:       strconv.Itoa(int(asnIpRecord.AutonomousSystemNumber)),
+		ASNOrg:    asnIpRecord.AutonomousSystemOrganization,
 	}
 
 	marshal, err := json.Marshal(vqRtcpXr)
@@ -372,6 +374,8 @@ type VqExtra struct {
 	UserAgent string  `json:"userAgent,omitempty"`
 	DeviceMAC string  `json:"deviceMAC,omitempty"`
 	System    string  `json:"system,omitempty"` // look up using external API that we store for a period?
+	ASN       string  `json:"asn,omitempty"`
+	ASNOrg    string  `json:"asnOrg,omitempty"`
 }
 
 func parseSipMsg(sipMsg *sipparser.SipMsg) VqRtcpXr {
