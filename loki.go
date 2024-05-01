@@ -44,14 +44,17 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 	}
 
 	labels := map[string]string{
-		"job":        "vqrtcpxr",
-		"device":     device,
-		"lan_addr":   lanAddr,
-		"wan_addr":   ip.String(),
-		"city":       geoIpRecord.City.Names["en"],
-		"region":     region,
-		"country":    geoIpRecord.Country.Names["en"],
-		"user_agent": sipMsg.UserAgent,
+		"job":           "vq_rtcpxr",
+		"vq_device":     device,
+		"vq_lan_addr":   lanAddr,
+		"vq_wan_addr":   ip.String(),
+		"vq_city":       geoIpRecord.City.Names["en"],
+		"vq_region":     region,
+		"vq_country":    geoIpRecord.Country.Names["en"],
+		"vq_user_agent": sipMsg.UserAgent,
+		"vq_system":     systemHosts,
+		"vq_device_mac": device,
+		"vq_call_id":    sipMsg.CallID,
 		/*"lat": geoIpRecord.Location.Latitude,
 		"long": geoIpRecord.Location.Longitude,
 		"customer": "todo using connectwise",*/
