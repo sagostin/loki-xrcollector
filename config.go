@@ -7,6 +7,7 @@ type config struct {
 	CollectorAddressTLS string
 	CollectorAddressUDP string
 	GeoIpFile           string
+	ASNIpFile           string
 	DeviceLookup        bool
 	DeviceLookupURL     string
 	DeviceLookupAuth    string

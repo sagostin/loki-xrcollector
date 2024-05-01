@@ -31,6 +31,7 @@ type XRPacketUDP struct {
 const maxPktSize = 4096
 
 var geoIpDB *geoip2.Reader
+var asnIpDB *geoip2.Reader
 
 func init() {
 	flag.Usage = func() {
@@ -47,6 +48,7 @@ func init() {
 	flag.StringVar(&lokiUser, "lokiUser", "", "Username for Loki")
 	flag.StringVar(&lokiPass, "lokiPass", "", "Password for Loki")
 	flag.StringVar(&cfg.GeoIpFile, "geoIpDB", "./GeoLite2-City.mmdb", "Path to GeoIP2 database")
+	flag.StringVar(&cfg.ASNIpFile, "geoIpDB", "./GeoLite2-ASN.mmdb", "Path to GeoIP2 database")
 	flag.BoolVar(&cfg.DeviceLookup, "deviceLookup", true, "Lookup device information in MAC database")
 	flag.StringVar(&cfg.DeviceLookupAuth, "deviceLookupAuth", "admin:admin", "Lookup device information basic auth creds") // will enable grabbing of device information from ConnectWise
 	flag.StringVar(&cfg.DeviceLookupURL, "deviceLookupURL", "http://localhost:8080", "URL to device lookup service")
@@ -99,6 +101,19 @@ func main() {
 			log.Error(err)
 		}
 	}(db)
+
+	dbAsn, err := geoip2.Open(cfg.ASNIpFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	asnIpDB = dbAsn
+
+	defer func(db *geoip2.Reader) {
+		err := db.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}(dbAsn)
 
 	go startTLS()
 	go startUDP()

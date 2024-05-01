@@ -22,6 +22,11 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		log.Error(err)
 	}
 
+	asnIpRecord, err := geoIpDB.ASN(ip)
+	if err != nil {
+		log.Error(err)
+	}
+
 	// todo grab customer / info based on device MAC using cached list of devices using ConnectWise linker
 
 	var region string
@@ -55,6 +60,8 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		"vq_system":     systemHosts,
 		"vq_device_mac": device,
 		"vq_call_id":    sipMsg.CallID,
+		"vq_asn":        strconv.Itoa(int(asnIpRecord.AutonomousSystemNumber)),
+		"vq_asn_org":    asnIpRecord.AutonomousSystemOrganization,
 		/*"lat": geoIpRecord.Location.Latitude,
 		"long": geoIpRecord.Location.Longitude,
 		"customer": "todo using connectwise",*/
