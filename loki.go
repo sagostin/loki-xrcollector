@@ -22,7 +22,7 @@ func sendLokiLog(sipMsg sipparser.SipMsg, device string, lanAddr string, wanAddr
 		log.Error(err)
 	}
 
-	asnIpRecord, err := geoIpDB.ASN(ip)
+	asnIpRecord, err := asnIpDB.ASN(ip)
 	if err != nil {
 		log.Error(err)
 	}
