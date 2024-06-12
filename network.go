@@ -20,7 +20,7 @@ func handleUDP(conn *net.UDPConn, inXRCh chan XRPacketUDP) {
 		n, addr, err := conn.ReadFromUDP(buffer)
 		if err != nil && err != io.EOF {
 			log.Println("Error on XR read: ", err)
-			continue
+			break
 		}
 		data := buffer[:n]
 		if n >= maxPktSize {
@@ -30,7 +30,7 @@ func handleUDP(conn *net.UDPConn, inXRCh chan XRPacketUDP) {
 			if cfg.Debug {
 				log.Printf("Received empty packet from %s\n", conn.RemoteAddr())
 			}
-			continue
+			break
 		}
 		if cfg.Debug {
 			log.Printf("Received following RTCP-XR report with %d bytes from %s:\n%s\n", n, addr, string(data))
@@ -41,7 +41,7 @@ func handleUDP(conn *net.UDPConn, inXRCh chan XRPacketUDP) {
 		var sipMsg *sipparser.SipMsg
 		if msg, sipMsg, err = process(data); err != nil {
 			log.Println(err)
-			continue
+			break
 		}
 
 		// todo include OrigID in labels instead of from_host, and include from_user as "device"
