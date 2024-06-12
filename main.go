@@ -132,6 +132,13 @@ func startUDP() {
 		log.Fatalln(err)
 	}
 
+	defer func(conn *net.UDPConn) {
+		err := conn.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}(connXR)
+
 	inXRCh := make(chan XRPacketUDP, 100)
 	outXRCh := make(chan XRPacketUDP, 100)
 
@@ -151,7 +158,12 @@ func startTLS() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer listener.Close()
+	defer func(listener net.Listener) {
+		err := listener.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}(listener)
 
 	inXRCh := make(chan XRPacketTLS, 100)
 	outXRCh := make(chan XRPacketTLS, 100)
